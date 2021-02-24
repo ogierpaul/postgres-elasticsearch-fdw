@@ -49,7 +49,7 @@ class SuricateFDW(ForeignDataWrapper):
 
 
         self.path = "/{index}".format(index=self.index)
-        
+
 
         if (username is None) != (password is None):
             raise ValueError("Must provide both username and password")

@@ -50,3 +50,10 @@ FROM
 WHERE query='{"query" : {"match" : {"body" : {"query" : "London"}}}}' and pg_id =1
 ;
 
+WITH d as (SELECT  pg_id, response::JSON as data FROM es_results)
+SELECT pg_id,
+       CAST(data->>'_score' AS FLOAT) as score,
+       CAST(data->>'_id' AS INTEGER) as es_id,
+       data->'_explanation' as details
+FROM d;
+
