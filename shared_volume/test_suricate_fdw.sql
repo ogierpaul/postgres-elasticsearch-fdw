@@ -34,6 +34,13 @@ OPTIONS
         password 'changeme'
     )
 ;
+CREATE OR REPLACE VIEW v_suricate
+AS
+SELECT
+    pg_id,
+    CAST(response::JSON->>'_id' AS INTEGER) AS es_id,
+    response::JSON as response
+FROM suricate;
 
 
 CREATE TABLE IF NOT EXISTS es_results (
@@ -57,3 +64,32 @@ SELECT pg_id,
        data->'_explanation' as details
 FROM d;
 
+DROP FUNCTION es_search(i INTEGER);
+CREATE OR REPLACE FUNCTION es_search(body TEXT, i INTEGER)
+RETURNS TABLE (pg_id bigint, query TEXT, response TEXT)
+AS
+$$
+    BEGIN
+RETURN QUERY
+SELECT
+    b."pg_id",
+    b."query",
+    b."response"
+FROM
+    suricate b
+WHERE b."query"=body and b."pg_id" =i;
+END
+$$ LANGUAGE plpgsql;
+SELECT es_search(body::TEXT,id)
+FROM myquery;
+
+SELECT
+    pg_id,
+    query,
+    response
+FROM
+    suricate
+WHERE query=(::JSON::TEXT) and pg_id =1;
+
+
+SELECT es_search("id") FROM myquery;
