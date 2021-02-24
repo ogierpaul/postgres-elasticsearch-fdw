@@ -1,11 +1,11 @@
-CREATE EXTENSION multicorn;
-
-CREATE SERVER multicorn_es FOREIGN DATA WRAPPER multicorn
+CREATE EXTENSION IF NOT EXISTS multicorn;
+DROP SERVER IF EXISTS multicorn_es CASCADE ;
+CREATE SERVER IF NOT EXISTS multicorn_es FOREIGN DATA WRAPPER multicorn
 OPTIONS (
   wrapper 'pg_es_fdw.ElasticsearchFDW'
 );
 
-CREATE TABLE articles
+CREATE TABLE IF NOT EXISTS articles
     (
         id SERIAL PRIMARY KEY,
         title TEXT NOT NULL,
@@ -14,7 +14,8 @@ CREATE TABLE articles
     )
 ;
 
-CREATE FOREIGN TABLE articles_es
+DROP FOREIGN TABLE IF EXISTS articles_es;
+CREATE FOREIGN TABLE IF NOT EXISTS articles_es
     (
         id bigint,
         title text,
@@ -23,7 +24,7 @@ CREATE FOREIGN TABLE articles_es
 SERVER multicorn_es
 OPTIONS
     (
-        host '127.0.0.1',
+        host 'elasticsearch',
         port '9200',
         type 'test',
         index 'articles'

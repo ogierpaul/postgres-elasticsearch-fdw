@@ -1,10 +1,42 @@
-postgres:
-    build: .
-    links:
-        - elasticsearch
+version: '3.8'
+
+services:
+  elasticsearch:
+    container_name: elasticsearch59
+    build:
+      context: ./elasticsearch
+      args:
+        ELK_VERSION: 7.10.1
+    volumes:
+      - type: volume
+        source: elasticsearch_fdw
+        target: /usr/share/elasticsearch/data
     ports:
-        - "5432:5432"
-elasticsearch:
-    image: elasticsearch:2
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+      ELASTIC_PASSWORD: changeme
+      # Use single node discovery in order to disable production mode and avoid bootstrap checks.
+      # see: https://www.elastic.co/guide/en/elasticsearch/reference/current/bootstrap-checks.html
+      discovery.type: single-node
+
+  postgres:
+    # Use the official image from PostgreSQL & PostGIS
+    container_name: postgres59
+    build:
+      context: ./postgres
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydb
     ports:
-        - "9200:9200"
+      - "5432:5432"
+    volumes:
+      - postgres_fdw:/var/lib/postgresql/data
+      - ./shared_volume:/shared_volume
+      - ./postgres/pg_es_fdw:/pg_es_fdw
+
+volumes:
+  elasticsearch_fdw:
+  postgres_fdw:
