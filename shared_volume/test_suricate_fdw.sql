@@ -1,3 +1,5 @@
+-- make sure to have run before test_pg_es_fdw.sql to populate the elastic index
+
 CREATE EXTENSION IF NOT EXISTS multicorn;
 DROP SERVER IF EXISTS multicorn_es CASCADE ;
 
@@ -34,6 +36,7 @@ OPTIONS
         password 'changeme'
     )
 ;
+
 DROP FUNCTION IF EXISTS es_search(body TEXT, i INTEGER);
 CREATE OR REPLACE FUNCTION es_search(body TEXT, i INTEGER)
 RETURNS TABLE (pg_id INTEGER, query TEXT, response TEXT)
@@ -51,42 +54,29 @@ WHERE b."query"=body and b."pg_id" =i;
 END
 $$ LANGUAGE plpgsql;
 
+DROP TABLE IF EXISTS sample_queries;
+CREATE TABLE IF NOT EXISTS sample_queries(
+    id INTEGER,
+    body JSON
+);
+INSERT INTO sample_queries (id, body)
+VALUES (1,
+        json_build_object('query',
+                          json_build_object('match_all', json_build_object()))),
+       (2,
+        json_build_object(
+            'query',
+            json_build_object(
+                'match',
+                json_build_object(
+                    'body',
+                    json_build_object('query', 'London')
+                    )
+                )
+            )
+        );
+
+
 
 SELECT es_search(body::TEXT,id)
-FROM myquery;
-
-
-CREATE TABLE IF NOT EXISTS es_results (
-        pg_id BIGINT,
-        query TEXT,
-        response TEXT
-);
-TRUNCATE TABLE es_results;
-INSERT INTO es_results
-SELECT
-    *
-FROM
-    suricate
-WHERE query='{"query" : {"match" : {"body" : {"query" : "London"}}}}' and pg_id =1
-;
-
-WITH d as (SELECT  pg_id, response::JSON as data FROM es_results)
-SELECT pg_id,
-       CAST(data->>'_score' AS FLOAT) as score,
-       CAST(data->>'_id' AS INTEGER) as es_id,
-       data->'_explanation' as details
-FROM d;
-
-DROP FUNCTION es_search(i INTEGER);
-
-
-SELECT
-    pg_id,
-    query,
-    response
-FROM
-    suricate
-WHERE query=(::JSON::TEXT) and pg_id =1;
-
-
-SELECT es_search("id") FROM myquery;
+FROM sample_queries;
