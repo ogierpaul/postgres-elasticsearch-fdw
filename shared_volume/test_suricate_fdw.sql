@@ -9,7 +9,7 @@ OPTIONS (
 
 DROP FOREIGN TABLE IF EXISTS suricate;
 CREATE FOREIGN TABLE IF NOT EXISTS suricate(
-        pg_id BIGINT,
+        pg_id INTEGER,
         query TEXT,
         response TEXT
     )
@@ -34,13 +34,26 @@ OPTIONS
         password 'changeme'
     )
 ;
-CREATE OR REPLACE VIEW v_suricate
+DROP FUNCTION IF EXISTS es_search(body TEXT, i INTEGER);
+CREATE OR REPLACE FUNCTION es_search(body TEXT, i INTEGER)
+RETURNS TABLE (pg_id INTEGER, query TEXT, response TEXT)
 AS
+$$
+    BEGIN
+RETURN QUERY
 SELECT
-    pg_id,
-    CAST(response::JSON->>'_id' AS INTEGER) AS es_id,
-    response::JSON as response
-FROM suricate;
+    b."pg_id",
+    b."query",
+    b."response"
+FROM
+    suricate b
+WHERE b."query"=body and b."pg_id" =i;
+END
+$$ LANGUAGE plpgsql;
+
+
+SELECT es_search(body::TEXT,id)
+FROM myquery;
 
 
 CREATE TABLE IF NOT EXISTS es_results (
@@ -65,23 +78,7 @@ SELECT pg_id,
 FROM d;
 
 DROP FUNCTION es_search(i INTEGER);
-CREATE OR REPLACE FUNCTION es_search(body TEXT, i INTEGER)
-RETURNS TABLE (pg_id bigint, query TEXT, response TEXT)
-AS
-$$
-    BEGIN
-RETURN QUERY
-SELECT
-    b."pg_id",
-    b."query",
-    b."response"
-FROM
-    suricate b
-WHERE b."query"=body and b."pg_id" =i;
-END
-$$ LANGUAGE plpgsql;
-SELECT es_search(body::TEXT,id)
-FROM myquery;
+
 
 SELECT
     pg_id,
