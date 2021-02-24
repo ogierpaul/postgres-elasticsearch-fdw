@@ -2,7 +2,7 @@ CREATE EXTENSION IF NOT EXISTS multicorn;
 DROP SERVER IF EXISTS multicorn_es CASCADE ;
 CREATE SERVER IF NOT EXISTS multicorn_es FOREIGN DATA WRAPPER multicorn
 OPTIONS (
-  wrapper 'pg_es_fdw.ElasticsearchFDW'
+  wrapper 'suricate_fdw.ElasticsearchFDW'
 );
 
 CREATE TABLE IF NOT EXISTS articles

@@ -35,6 +35,7 @@ services:
     volumes:
       - postgres_fdw:/var/lib/postgresql/data
       - ./shared_volume:/shared_volume
+      - ./postgres/suricate_fdw:/suricate_fdw
       - ./postgres/pg_es_fdw:/pg_es_fdw
 
 volumes:

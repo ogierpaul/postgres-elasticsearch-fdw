@@ -3,16 +3,15 @@ DROP SERVER IF EXISTS multicorn_es CASCADE ;
 
 CREATE SERVER IF NOT EXISTS  multicorn_es FOREIGN DATA WRAPPER multicorn
 OPTIONS (
-  wrapper 'pg_es_fdw.ElasticsearchFDW'
+  wrapper 'suricate_fdw.SuricateFDW'
 );
 
 
-DROP FOREIGN TABLE IF EXISTS myjson;
-CREATE FOREIGN TABLE IF NOT EXISTS myjson
-    (
+DROP FOREIGN TABLE IF EXISTS suricate;
+CREATE FOREIGN TABLE IF NOT EXISTS suricate(
         pg_id BIGINT,
         query TEXT,
-        result TEXT
+        response TEXT
     )
 SERVER multicorn_es
 OPTIONS
@@ -20,28 +19,34 @@ OPTIONS
         host 'elasticsearch',
         port '9200',
         index 'article-index',
-        rowid_column 'pg_id',
+        --rowid_column 'id',
         query_column 'query',
-        -- score_column 'score',
+        pg_id_column 'pg_id',
+        response_column 'response',
+        size '10',
+        explain 'true',
         --default_sort 'last_updated:desc',
         --sort_column 'sort',
         refresh 'false',
         complete_returning 'false',
         timeout '20',
         username 'elastic',
-        password 'changeme',
-        query_json 'true',
-        raw_results 'true'
+        password 'changeme'
     )
 ;
 
 
+CREATE TABLE IF NOT EXISTS es_results (
+        pg_id BIGINT,
+        query TEXT,
+        response TEXT
+);
+TRUNCATE TABLE es_results;
+INSERT INTO es_results
 SELECT
     *
 FROM
-    myjson
-WHERE query='{"body":{"query" : {"match" : {"body" : {"query" : "London"}}}}, "pg_id":1}'
+    suricate
+WHERE query='{"query" : {"match" : {"body" : {"query" : "London"}}}}' and pg_id =1
 ;
-
-
 

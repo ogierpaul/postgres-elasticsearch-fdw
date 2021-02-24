@@ -7,9 +7,9 @@ from setuptools import setup
 
 if __name__ == "__main__":
     setup(
-        name="pg_es_fdw",
-        packages=["pg_es_fdw"],
-        version="0.10.4",
+        name="suricate_fdw",
+        packages=["suricate_fdw"],
+        version="0.10.2",
         description="Connect PostgreSQL and Elastic Search with this Foreign Data Wrapper",
         long_description_content_type="text/markdown",
         author="Matthew Franglen",
@@ -17,5 +17,6 @@ if __name__ == "__main__":
         url="https://github.com/matthewfranglen/postgres-elasticsearch-fdw",
         download_url="https://github.com/matthewfranglen/postgres-elasticsearch-fdw/archive/0.10.2.zip",
         keywords=["postgres", "postgresql", "elastic", "elastic search", "fdw"],
-        install_requires=["elasticsearch"],
+        install_requires=["elasticsearch==7.10.1"],
     )
+

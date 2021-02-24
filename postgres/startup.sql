@@ -1,3 +1,16 @@
+CREATE TABLE IF NOT EXISTS demo(
+    row_id INTEGER PRIMARY KEY,
+    name VARCHAR,
+    city VARCHAR
+);
+TRUNCATE TABLE demo;
+INSERT INTO demo (row_id, name, city) VALUES (1, 'Paul', 'New York');
+INSERT INTO demo (row_id, name, city) VALUES (2, 'Robert', 'Milan');
+INSERT INTO demo (row_id, name, city) VALUES (3, 'Alice', 'Shanghai');
+INSERT INTO demo (row_id, name, city) VALUES (4, 'Alizah', 'Schanghai');
+INSERT INTO demo (row_id, name, city) VALUES (5, 'Bob', 'Mailand');
+
+
 CREATE EXTENSION IF NOT EXISTS multicorn;
 DROP SERVER IF EXISTS multicorn_es CASCADE ;
 
@@ -6,34 +19,17 @@ OPTIONS (
   wrapper 'suricate_fdw.ElasticsearchFDW'
 );
 
-DROP FOREIGN TABLE IF EXISTS qix;
-CREATE FOREIGN TABLE IF NOT EXISTS qix (
-    id INTEGER,
-    body JSON
-)
-SERVER multicorn_es
-OPTIONS
+CREATE TABLE IF NOT EXISTS articles
     (
-        host 'elasticsearch',
-        port '9200',
-        index 'qix',
-        rowid_column 'id',
-        -- query_column 'query',
-        -- score_column 'score',
-        --default_sort 'last_updated:desc',
-        --sort_column 'sort',
-        refresh 'false',
-        complete_returning 'false',
-        timeout '20',
-        username 'elastic',
-        password 'changeme'
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE
     )
 ;
 
-
-
 DROP FOREIGN TABLE IF EXISTS articles_es;
-CREATE FOREIGN TABLE IF NOT EXISTS articles_es
+CREATE FOREIGN TABLE articles_es
     (
         id BIGINT,
         title TEXT,
@@ -99,38 +95,16 @@ VALUES
     )
     ;
 
-DROP TABLE IF EXISTS myquery CASCADE ;
-CREATE TABLE IF NOT EXISTS myquery (
-    id INTEGER PRIMARY KEY ,
-    body JSON
-);
-TRUNCATE TABLE myquery;
-INSERT INTO myquery (id, body) VALUES
-    (
-        1,
-     json_build_object(
-         'query', json_build_object(
-             'match_all', json_build_object(
-                 )
-             )
-         )
-     ),
-    (2,
-     json_build_object(
-             'query', json_build_object(
-             'match', json_build_object(
-                     'body', json_build_object(
-                             'query', 'London'
-                         )
-                 )
-            )
-         )
-     );
-INSERT INTO qix (id, body)
-SELECT id, body::json FROM myquery;
+SELECT
+    id,
+    title,
+    body
+FROM
+    articles_es
+;
 
-DROP FOREIGN TABLE IF EXISTS myjson;
-CREATE FOREIGN TABLE IF NOT EXISTS myjson
+DROP FOREIGN TABLE myjson;
+CREATE FOREIGN TABLE myjson
     (
         id BIGINT,
         title TEXT,
@@ -157,24 +131,4 @@ OPTIONS
         query_json 'true'
     )
 ;
-
-
-CREATE OR REPLACE FUNCTION getq(i INT)
-RETURNS JSON
-LANGUAGE sql
-AS
-$$
-SELECT body from myquery WHERE myquery.id=i;
-$$;
-
-SELECT
-    *
-FROM
-    myjson
-WHERE query='{"query" : {"match_all" : {}}}'
-;
-
-
-
-SELECT getq(1)::TEXT;
 
